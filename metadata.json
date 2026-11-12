@@ -1,0 +1,8 @@
+{
+  "name": "Apex Racer 3D - High-Speed Arcade Racing",
+  "description": "An action-packed 3D highway racing game built with Three.js featuring procedural vehicles, dynamic traffic, nitro boost, audio synthesis, and customizable themes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
