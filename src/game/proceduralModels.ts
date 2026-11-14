@@ -444,8 +444,605 @@ export function buildInterceptor(colorHex: number): CarRig {
   };
 }
 
+/**
+ * Procedural Lamborghini: Sharp Italian wedge, hexagonal aero intakes, Y-signature DRLs, carbon wing
+ */
+export function buildLamborghini(colorHex: number): CarRig {
+  const group = new THREE.Group();
+  const wheels: THREE.Mesh[] = [];
+  const headlights: THREE.Mesh[] = [];
+  const taillights: THREE.Mesh[] = [];
+
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: colorHex,
+    roughness: 0.18,
+    metalness: 0.82,
+  });
+
+  const carbonMat = new THREE.MeshStandardMaterial({
+    color: 0x18181c,
+    roughness: 0.4,
+    metalness: 0.6,
+  });
+
+  // 1. Extreme low-slung wedge chassis
+  const chassisGeo = new THREE.BoxGeometry(1.88, 0.38, 4.0);
+  const chassis = new THREE.Mesh(chassisGeo, bodyMat);
+  chassis.position.set(0, 0.4, 0);
+  chassis.castShadow = true;
+  chassis.receiveShadow = true;
+  group.add(chassis);
+
+  // 2. Sculpted wedge nose with steep rake
+  const noseGeo = new THREE.BoxGeometry(1.72, 0.22, 1.4);
+  const nose = new THREE.Mesh(noseGeo, bodyMat);
+  nose.position.set(0, 0.5, -1.2);
+  nose.rotation.x = 0.12;
+  nose.castShadow = true;
+  group.add(nose);
+
+  // Front hexagonal carbon air dams & splitter
+  const splitter = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.08, 0.6), carbonMat);
+  splitter.position.set(0, 0.2, -1.95);
+  group.add(splitter);
+
+  // Hexagonal intake inserts (Left & Right)
+  [-0.55, 0.55].forEach(x => {
+    const intake = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.18, 0.15), carbonMat);
+    intake.position.set(x, 0.36, -1.92);
+    group.add(intake);
+  });
+
+  // 3. Stealth fighter cockpit canopy
+  const cabinGeo = new THREE.BoxGeometry(1.34, 0.52, 1.8);
+  const cabin = new THREE.Mesh(cabinGeo, glassMat);
+  cabin.position.set(0, 0.82, 0.02);
+  cabin.castShadow = true;
+  group.add(cabin);
+
+  // Roof spine (body color)
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.06, 1.3), bodyMat);
+  roof.position.set(0, 1.1, 0.05);
+  group.add(roof);
+
+  // 4. Rear louvered engine deck
+  for (let l = 0.7; l <= 1.4; l += 0.22) {
+    const louver = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.04, 0.14), carbonMat);
+    louver.position.set(0, 0.72, l);
+    louver.rotation.x = -0.15;
+    group.add(louver);
+  }
+
+  // 5. Y-shaped signature DRL headlights
+  const drlMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+  [-0.62, 0.62].forEach((x, idx) => {
+    // Horizontal segment
+    const hSeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.06, 0.06), drlMat);
+    hSeg.position.set(x, 0.48, -1.96);
+    group.add(hSeg);
+    headlights.push(hSeg);
+
+    // Diagonal Y branch
+    const diag = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.05, 0.06), drlMat);
+    diag.position.set(x + (idx === 0 ? 0.08 : -0.08), 0.54, -1.93);
+    diag.rotation.z = idx === 0 ? -0.5 : 0.5;
+    group.add(diag);
+  });
+
+  // 6. Rear Y-pattern tail lights & diffuser
+  const tlMat = new THREE.MeshBasicMaterial({ color: 0xff0033 });
+  [-0.58, 0.58].forEach((x, idx) => {
+    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, 0.06), tlMat);
+    tl.position.set(x, 0.58, 2.01);
+    tl.rotation.z = idx === 0 ? 0.15 : -0.15;
+    group.add(tl);
+    taillights.push(tl);
+  });
+
+  // 7. Aggressive high-mount GT wing
+  [-0.6, 0.6].forEach(x => {
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.35, 0.18), carbonMat);
+    pillar.position.set(x, 0.76, 1.7);
+    pillar.rotation.x = -0.2;
+    group.add(pillar);
+  });
+  const wingBlade = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.05, 0.4), carbonMat);
+  wingBlade.position.set(0, 0.94, 1.75);
+  wingBlade.rotation.x = -0.08;
+  group.add(wingBlade);
+
+  // 8. Massive central hexagonal exhaust
+  const exhaustTip = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.18, 6), exhaustMat);
+  exhaustTip.rotateX(Math.PI / 2);
+  exhaustTip.position.set(0, 0.42, 2.02);
+  group.add(exhaustTip);
+
+  const exhaustPipes = [new THREE.Vector3(0, 0.42, 2.02)];
+
+  // Underglow (Vibrant electric green/cyan)
+  const underglow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.8, 3.4).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.5, depthWrite: false })
+  );
+  underglow.position.set(0, 0.05, 0);
+  group.add(underglow);
+
+  const wheelsList = attachStandardWheels(group, 1.96, -1.25, 1.3);
+  wheels.push(...wheelsList);
+
+  return { group, wheels, bodyMesh: chassis, headlights, taillights, exhaustPipes, underglow };
+}
+
+/**
+ * Procedural Bugatti: Horseshoe front grille, sweeping C-line flank, quad-LED 8-eye lights, active airbrake
+ */
+export function buildBugatti(colorHex: number): CarRig {
+  const group = new THREE.Group();
+  const wheels: THREE.Mesh[] = [];
+  const headlights: THREE.Mesh[] = [];
+  const taillights: THREE.Mesh[] = [];
+
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: colorHex,
+    roughness: 0.16,
+    metalness: 0.8,
+  });
+
+  const accentMat = new THREE.MeshStandardMaterial({
+    color: 0x0a162b, // Deep French Bugatti navy accent
+    roughness: 0.2,
+    metalness: 0.85,
+  });
+
+  const chromeMat = new THREE.MeshStandardMaterial({
+    color: 0xf1f5f9,
+    roughness: 0.1,
+    metalness: 0.95,
+  });
+
+  // 1. Sleek aerodynamic fuselage
+  const chassisGeo = new THREE.BoxGeometry(1.92, 0.44, 4.1);
+  const chassis = new THREE.Mesh(chassisGeo, bodyMat);
+  chassis.position.set(0, 0.44, 0);
+  chassis.castShadow = true;
+  group.add(chassis);
+
+  // 2. Sculpted curved nose
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.3, 1.3), bodyMat);
+  nose.position.set(0, 0.55, -1.25);
+  nose.castShadow = true;
+  group.add(nose);
+
+  // 3. Iconic Horseshoe Grille at center front
+  const grilleBorder = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.05, 8, 24, Math.PI), chromeMat);
+  grilleBorder.position.set(0, 0.42, -2.06);
+  grilleBorder.rotation.x = Math.PI;
+  group.add(grilleBorder);
+
+  const grilleMesh = new THREE.Mesh(
+    new THREE.CircleGeometry(0.27, 16),
+    new THREE.MeshStandardMaterial({ color: 0x0a0c10, roughness: 0.9 })
+  );
+  grilleMesh.position.set(0, 0.42, -2.05);
+  grilleMesh.rotation.y = Math.PI;
+  group.add(grilleMesh);
+
+  // 4. Cockpit canopy
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.56, 1.9), glassMat);
+  cabin.position.set(0, 0.88, 0.0);
+  cabin.castShadow = true;
+  group.add(cabin);
+
+  // 5. Bugatti Signature "C-Line" on left & right flanks
+  [-0.92, 0.92].forEach(x => {
+    // Top sweep
+    const topArc = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 1.8), chromeMat);
+    topArc.position.set(x, 1.05, 0.0);
+    // Rear drop
+    const rearDrop = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.6, 0.06), chromeMat);
+    rearDrop.position.set(x, 0.75, 0.9);
+    // Bottom return
+    const bottomReturn = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 1.8), chromeMat);
+    bottomReturn.position.set(x, 0.45, 0.0);
+    group.add(topArc, rearDrop, bottomReturn);
+  });
+
+  // Dual roof air scoops feeding W16
+  [-0.32, 0.32].forEach(x => {
+    const scoop = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.7, 8), accentMat);
+    scoop.position.set(x, 1.05, 0.6);
+    scoop.rotation.x = Math.PI / 2.3;
+    group.add(scoop);
+  });
+
+  // 6. Quad-LED 8-eye Headlights (4 crystal square pods per side)
+  [-0.65, 0.65].forEach(sideX => {
+    for (let i = 0; i < 4; i++) {
+      const offsetX = (i - 1.5) * 0.07;
+      const pod = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.07, 0.04), headLightMat);
+      pod.position.set(sideX + offsetX, 0.52, -2.04);
+      group.add(pod);
+      headlights.push(pod);
+    }
+  });
+
+  // 7. Full-width horizontal rear LED light blade
+  const tlBlade = new THREE.Mesh(
+    new THREE.BoxGeometry(1.82, 0.06, 0.05),
+    new THREE.MeshBasicMaterial({ color: 0xff0038 })
+  );
+  tlBlade.position.set(0, 0.64, 2.06);
+  group.add(tlBlade);
+  taillights.push(tlBlade);
+
+  // 8. Active hydraulic rear wing
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.06, 0.42), accentMat);
+  wing.position.set(0, 0.98, 1.7);
+  wing.rotation.x = -0.05;
+  group.add(wing);
+
+  // 9. Quad central exhaust cluster
+  const exhaustPipes = [
+    new THREE.Vector3(-0.15, 0.35, 2.06),
+    new THREE.Vector3(-0.05, 0.35, 2.06),
+    new THREE.Vector3(0.05, 0.35, 2.06),
+    new THREE.Vector3(0.15, 0.35, 2.06),
+  ];
+  exhaustPipes.forEach(pos => {
+    const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.14, 8), chromeMat);
+    tip.rotateX(Math.PI / 2);
+    tip.position.copy(pos);
+    group.add(tip);
+  });
+
+  const underglow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.8, 3.6).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x0284c7, transparent: true, opacity: 0.5, depthWrite: false })
+  );
+  underglow.position.set(0, 0.05, 0);
+  group.add(underglow);
+
+  const wheelsList = attachStandardWheels(group, 1.98, -1.25, 1.3);
+  wheels.push(...wheelsList);
+
+  return { group, wheels, bodyMesh: chassis, headlights, taillights, exhaustPipes, underglow };
+}
+
+/**
+ * Procedural Ferrari: Sculpted Italian organic curves, F1 shark nose, S-Duct hood, twin circular taillights
+ */
+export function buildFerrari(colorHex: number): CarRig {
+  const group = new THREE.Group();
+  const wheels: THREE.Mesh[] = [];
+  const headlights: THREE.Mesh[] = [];
+  const taillights: THREE.Mesh[] = [];
+
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: colorHex,
+    roughness: 0.14,
+    metalness: 0.86,
+  });
+
+  const carbonMat = new THREE.MeshStandardMaterial({
+    color: 0x141416,
+    roughness: 0.35,
+    metalness: 0.6,
+  });
+
+  // 1. Sleek sculpted Italian chassis
+  const chassisGeo = new THREE.BoxGeometry(1.86, 0.4, 3.9);
+  const chassis = new THREE.Mesh(chassisGeo, bodyMat);
+  chassis.position.set(0, 0.42, 0);
+  chassis.castShadow = true;
+  group.add(chassis);
+
+  // 2. F1 shark nose with S-Duct channel
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.24, 1.3), bodyMat);
+  nose.position.set(0, 0.52, -1.2);
+  nose.rotation.x = 0.08;
+  nose.castShadow = true;
+  group.add(nose);
+
+  // S-Duct hood scoop in black carbon
+  const sDuct = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.6), carbonMat);
+  sDuct.position.set(0, 0.62, -0.9);
+  sDuct.rotation.x = -0.15;
+  group.add(sDuct);
+
+  // Front carbon splitter with aerodynamic center pylon
+  const splitter = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.06, 0.5), carbonMat);
+  splitter.position.set(0, 0.2, -1.92);
+  group.add(splitter);
+
+  // 3. Compact bubble cockpit canopy
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.34, 0.54, 1.8), glassMat);
+  cabin.position.set(0, 0.86, -0.05);
+  cabin.castShadow = true;
+  group.add(cabin);
+
+  // Flying buttresses (Left & Right C-pillars)
+  [-0.58, 0.58].forEach(x => {
+    const buttress = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.4, 0.9), bodyMat);
+    buttress.position.set(x, 0.78, 0.6);
+    buttress.rotation.x = -0.3;
+    group.add(buttress);
+  });
+
+  // Mid-engine glass hood showing red engine block
+  const engineBlock = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.22, 0.7),
+    new THREE.MeshStandardMaterial({ color: 0xcc1122, roughness: 0.3, metalness: 0.7 })
+  );
+  engineBlock.position.set(0, 0.65, 0.7);
+  group.add(engineBlock);
+
+  // 4. Vertical sweeping LED Headlights
+  [-0.62, 0.62].forEach((x, idx) => {
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.4), headLightMat);
+    hl.position.set(x, 0.56, -1.75);
+    hl.rotation.y = idx === 0 ? 0.1 : -0.1;
+    group.add(hl);
+    headlights.push(hl);
+  });
+
+  // 5. Iconic Twin Circular Tail Lamps
+  const circleMat = new THREE.MeshBasicMaterial({ color: 0xff1122 });
+  const circleGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.06, 16);
+  circleGeo.rotateX(Math.PI / 2);
+
+  [-0.64, -0.42, 0.42, 0.64].forEach(x => {
+    const tl = new THREE.Mesh(circleGeo, circleMat);
+    tl.position.set(x, 0.6, 1.96);
+    group.add(tl);
+    taillights.push(tl);
+  });
+
+  // 6. Sculpted ducktail bridge spoiler
+  const ducktail = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.12, 0.3), bodyMat);
+  ducktail.position.set(0, 0.74, 1.82);
+  ducktail.rotation.x = -0.1;
+  group.add(ducktail);
+
+  // 7. Dual circular exhaust tips
+  const exhaustPipes = [new THREE.Vector3(-0.35, 0.35, 1.96), new THREE.Vector3(0.35, 0.35, 1.96)];
+  exhaustPipes.forEach(pos => {
+    const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 10), exhaustMat);
+    tip.rotateX(Math.PI / 2);
+    tip.position.copy(pos);
+    group.add(tip);
+  });
+
+  const underglow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.8, 3.5).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0xff002b, transparent: true, opacity: 0.5, depthWrite: false })
+  );
+  underglow.position.set(0, 0.05, 0);
+  group.add(underglow);
+
+  const wheelsList = attachStandardWheels(group, 1.94, -1.2, 1.25);
+  wheels.push(...wheelsList);
+
+  return { group, wheels, bodyMesh: chassis, headlights, taillights, exhaustPipes, underglow };
+}
+
+/**
+ * Procedural Mahindra Thar: Iconic rugged Indian 4x4, lifted suspension, 7-slot vertical grille,
+ * chunky off-road tires, flared fenders, hardtop cabin, and rear-mounted spare wheel!
+ */
+export function buildMahindraThar(colorHex: number): CarRig {
+  const group = new THREE.Group();
+  const wheels: THREE.Mesh[] = [];
+  const headlights: THREE.Mesh[] = [];
+  const taillights: THREE.Mesh[] = [];
+
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: colorHex,
+    roughness: 0.35,
+    metalness: 0.45,
+  });
+
+  const claddingMat = new THREE.MeshStandardMaterial({
+    color: 0x1f2328, // Heavy-duty textured matte black cladding
+    roughness: 0.9,
+    metalness: 0.1,
+  });
+
+  const chromeMat = new THREE.MeshStandardMaterial({
+    color: 0xd1d5db,
+    roughness: 0.2,
+    metalness: 0.9,
+  });
+
+  // 1. Lifted Boxy 4x4 Body Shell
+  const chassisGeo = new THREE.BoxGeometry(1.94, 0.68, 3.8);
+  const chassis = new THREE.Mesh(chassisGeo, bodyMat);
+  chassis.position.set(0, 0.72, 0);
+  chassis.castShadow = true;
+  group.add(chassis);
+
+  // 2. High boxy hood
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.32, 1.35), bodyMat);
+  hood.position.set(0, 0.98, -1.05);
+  hood.castShadow = true;
+  group.add(hood);
+
+  // Rugged hood latches (Left & Right)
+  [-0.82, 0.82].forEach(x => {
+    const latch = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.15), claddingMat);
+    latch.position.set(x, 1.05, -1.2);
+    group.add(latch);
+  });
+
+  // 3. Iconic 7-Vertical-Slot Grille in matte black
+  const grilleSurround = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.38, 0.15), claddingMat);
+  grilleSurround.position.set(0, 0.78, -1.88);
+  group.add(grilleSurround);
+
+  for (let s = -0.45; s <= 0.45; s += 0.15) {
+    const slot = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.24, 0.06), bodyMat);
+    slot.position.set(s, 0.78, -1.95);
+    group.add(slot);
+  }
+
+  // 4. Classic Round Retro LED Headlights with Halo Rings
+  const roundGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.1, 16);
+  roundGeo.rotateX(Math.PI / 2);
+  [-0.64, 0.64].forEach(x => {
+    const hl = new THREE.Mesh(roundGeo, headLightMat);
+    hl.position.set(x, 0.8, -1.94);
+    group.add(hl);
+    headlights.push(hl);
+
+    // Chrome halo ring surround
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.03, 8, 18), chromeMat);
+    halo.position.set(x, 0.8, -1.96);
+    group.add(halo);
+  });
+
+  // 5. Heavy-Duty Steel Off-road Front Bumper with Tow Hooks
+  const bumper = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.32, 0.35), claddingMat);
+  bumper.position.set(0, 0.48, -1.98);
+  group.add(bumper);
+
+  // Skid plate
+  const skidPlate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.18, 0.15), chromeMat);
+  skidPlate.position.set(0, 0.35, -1.94);
+  skidPlate.rotation.x = -0.3;
+  group.add(skidPlate);
+
+  // Red recovery tow hooks
+  const hookMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+  [-0.4, 0.4].forEach(x => {
+    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.02, 6, 12), hookMat);
+    hook.position.set(x, 0.42, -2.16);
+    group.add(hook);
+  });
+
+  // 6. Flared Boxy Wheel Arches (Wide Mudguards)
+  [-1.02, 1.02].forEach(x => {
+    // Front arch
+    const frontArch = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.22, 1.05), claddingMat);
+    frontArch.position.set(x, 0.72, -1.15);
+    // Rear arch
+    const rearArch = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.22, 1.05), claddingMat);
+    rearArch.position.set(x, 0.72, 1.25);
+    // Side step runner bar
+    const step = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.08, 1.3), claddingMat);
+    step.position.set(x, 0.44, 0.05);
+    group.add(frontArch, rearArch, step);
+  });
+
+  // 7. Boxy Hardtop Cabin Canopy (Upright windshield & tinted glass)
+  const cabinGeo = new THREE.BoxGeometry(1.68, 0.72, 2.15);
+  const cabin = new THREE.Mesh(cabinGeo, glassMat);
+  cabin.position.set(0, 1.32, 0.35);
+  cabin.castShadow = true;
+  group.add(cabin);
+
+  // Hardtop roof cap (Matte black or body color)
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.08, 2.2), claddingMat);
+  roof.position.set(0, 1.7, 0.35);
+  group.add(roof);
+
+  // Roof rack rails
+  [-0.75, 0.75].forEach(x => {
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.9, 8), chromeMat);
+    rail.position.set(x, 1.78, 0.35);
+    rail.rotation.x = Math.PI / 2;
+    group.add(rail);
+  });
+
+  // 8. Full-Size External Spare Wheel mounted on rear tailgate!
+  const spareWheelGroup = new THREE.Group();
+  spareWheelGroup.position.set(0, 0.95, 2.12);
+
+  const spareTire = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.42, 0.42, 0.32, 18).rotateZ(Math.PI / 2),
+    tireMat
+  );
+  spareTire.rotation.y = Math.PI / 2;
+  spareWheelGroup.add(spareTire);
+
+  const spareRim = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.26, 0.26, 0.33, 12).rotateZ(Math.PI / 2),
+    rimMat
+  );
+  spareRim.rotation.y = Math.PI / 2;
+  spareWheelGroup.add(spareRim);
+
+  const spareMount = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.2), claddingMat);
+  spareMount.position.z = -0.16;
+  spareWheelGroup.add(spareMount);
+
+  group.add(spareWheelGroup);
+
+  // 9. Vertical Rectangular LED Taillights on rear corners
+  [-0.82, 0.82].forEach(x => {
+    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.32, 0.06), tailLightMat);
+    tl.position.set(x, 0.82, 1.93);
+    group.add(tl);
+    taillights.push(tl);
+  });
+
+  // Dual off-road exhaust tips (tucked underneath)
+  const exhaustPipes = [new THREE.Vector3(-0.6, 0.38, 1.9), new THREE.Vector3(0.6, 0.38, 1.9)];
+  exhaustPipes.forEach(pos => {
+    const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.16, 8), chromeMat);
+    tip.rotateX(Math.PI / 2);
+    tip.position.copy(pos);
+    group.add(tip);
+  });
+
+  // Amber/Warm white trail underglow
+  const underglow = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.0, 3.6).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.4, depthWrite: false })
+  );
+  underglow.position.set(0, 0.05, 0);
+  group.add(underglow);
+
+  // 10. Heavy Chunky 4x4 Off-Road Tires with Lifted Suspension
+  const offRoadTireGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.34, 18);
+  offRoadTireGeo.rotateZ(Math.PI / 2);
+
+  const offRoadRimGeo = new THREE.CylinderGeometry(0.26, 0.26, 0.35, 12);
+  offRoadRimGeo.rotateZ(Math.PI / 2);
+
+  const halfW = 2.05 * 0.5;
+  const wheelY = 0.44; // Lifted ground height
+  const zPositions = [-1.15, 1.25];
+
+  [-halfW, halfW].forEach(x => {
+    zPositions.forEach(z => {
+      const wGroup = new THREE.Group();
+      wGroup.position.set(x, wheelY, z);
+
+      const tire = new THREE.Mesh(offRoadTireGeo, tireMat);
+      tire.castShadow = true;
+      tire.receiveShadow = true;
+      wGroup.add(tire);
+
+      const rim = new THREE.Mesh(offRoadRimGeo, rimMat);
+      wGroup.add(rim);
+
+      group.add(wGroup);
+      wheels.push(tire);
+    });
+  });
+
+  return { group, wheels, bodyMesh: chassis, headlights, taillights, exhaustPipes, underglow };
+}
+
 export function buildPlayerCar(modelId: CarModelId, colorHex: number): CarRig {
   switch (modelId) {
+    case 'lamborghini':
+      return buildLamborghini(colorHex);
+    case 'bugatti':
+      return buildBugatti(colorHex);
+    case 'ferrari':
+      return buildFerrari(colorHex);
+    case 'thar':
+      return buildMahindraThar(colorHex);
     case 'cyber':
       return buildCyberCar(colorHex);
     case 'muscle':

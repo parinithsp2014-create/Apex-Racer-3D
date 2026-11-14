@@ -1,4 +1,12 @@
-export type CarModelId = 'supercar' | 'muscle' | 'cyber' | 'interceptor';
+export type CarModelId =
+  | 'supercar'
+  | 'muscle'
+  | 'cyber'
+  | 'interceptor'
+  | 'lamborghini'
+  | 'bugatti'
+  | 'ferrari'
+  | 'thar';
 
 export interface CarConfig {
   id: CarModelId;

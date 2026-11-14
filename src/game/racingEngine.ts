@@ -595,9 +595,33 @@ export class RacingEngine {
     });
   }
 
+  private getCarSpecs() {
+    switch (this.currentModel) {
+      case 'bugatti':
+        return { maxSpeed: 265, boostMax: 295, accel: 72, boostAccel: 155, steer: 16.5, roll: 0.11 };
+      case 'lamborghini':
+        return { maxSpeed: 245, boostMax: 275, accel: 68, boostAccel: 145, steer: 18.0, roll: 0.14 };
+      case 'ferrari':
+        return { maxSpeed: 250, boostMax: 280, accel: 70, boostAccel: 148, steer: 18.5, roll: 0.13 };
+      case 'thar':
+        return { maxSpeed: 200, boostMax: 230, accel: 55, boostAccel: 120, steer: 15.0, roll: 0.18 };
+      case 'cyber':
+        return { maxSpeed: 245, boostMax: 270, accel: 68, boostAccel: 140, steer: 17.0, roll: 0.12 };
+      case 'muscle':
+        return { maxSpeed: 220, boostMax: 250, accel: 62, boostAccel: 135, steer: 15.5, roll: 0.14 };
+      case 'interceptor':
+        return { maxSpeed: 215, boostMax: 245, accel: 60, boostAccel: 130, steer: 16.0, roll: 0.12 };
+      case 'supercar':
+      default:
+        return { maxSpeed: 230, boostMax: 260, accel: 60, boostAccel: 130, steer: 16.5, roll: 0.12 };
+    }
+  }
+
   // --- MAIN SIMULATION STEP ---
   private updatePhysics(dt: number) {
     if (!this.isRunning || this.isPaused) return;
+
+    const specs = this.getCarSpecs();
 
     // Multiplier countdown
     if (this.multiplierTimer > 0) {
@@ -634,8 +658,8 @@ export class RacingEngine {
     }
 
     // Acceleration & Braking
-    const accelRate = this.isBoosting ? 130 : 60;
-    const maxSpeedTarget = this.isBoosting ? 245 : this.maxSpeedKmH;
+    const accelRate = this.isBoosting ? specs.boostAccel : specs.accel;
+    const maxSpeedTarget = this.isBoosting ? specs.boostMax : specs.maxSpeed;
 
     if (this.inputs.up) {
       this.speedKmH += accelRate * dt;
@@ -654,17 +678,17 @@ export class RacingEngine {
     }
 
     // Steering & Banking
-    const steerSpeed = 16.5;
+    const steerSpeed = specs.steer;
     let targetRoll = 0;
     let isSkidding = false;
 
     if (this.inputs.left) {
       this.playerPos.x -= steerSpeed * dt * (this.speedKmH / 120);
-      targetRoll = 0.12;
+      targetRoll = specs.roll;
       if (this.speedKmH > 130) isSkidding = true;
     } else if (this.inputs.right) {
       this.playerPos.x += steerSpeed * dt * (this.speedKmH / 120);
-      targetRoll = -0.12;
+      targetRoll = -specs.roll;
       if (this.speedKmH > 130) isSkidding = true;
     }
 
